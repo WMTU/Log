@@ -70,7 +70,7 @@ class SongListAPI(Resource):
     songs = songs.limit(args['n'])
 
     # Return results
-    return { 'songs': [marshal(s, song_fields) for s in songs] }
+    return { 'songs': [marshal(s, song_fields) for s in songs] }, 200, {'Access-Control-Allow-Origin': '*'}
 
 
   def post(self):
@@ -115,13 +115,13 @@ class SongListAPI(Resource):
     t.start()
 
     # Return new song
-    return { 'song': marshal(new_song, song_fields) }
+    return { 'song': marshal(new_song, song_fields) }, 202, {'Access-Control-Allow-Origin': '*'}
 
 
 class SongAPI(Resource):
   def get(self, id):
     song = Song.query.filter_by(id = id).first_or_404()
-    return { 'song': marshal(song, song_fields) }
+    return { 'song': marshal(song, song_fields) }, 200, {'Access-Control-Allow-Origin': '*'}
 
 
 class ChartsAPI(Resource):
