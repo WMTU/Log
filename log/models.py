@@ -16,19 +16,3 @@ def dump_datetime(value):
 # Define Song class for existing djlogs table
 class Song(db.Model):
   __table__ = db.Model.metadata.tables['djlogs']
-
-  @property
-  def serialize(self):
-    # Return object data in easily serializeable format
-    return {
-      'id'               : self.id,
-      'cd_number'        : self.cd_number,
-      'song_name'        : self.song_name,
-      'artist'           : self.artist,
-      'genre'            : self.genre,
-      'album'            : self.album,
-      'score'            : self.score,
-      'location'         : self.location,
-      'truncated_artist' : self.truncated_artist,
-      'ts'               : dump_datetime(self.ts)
-    }

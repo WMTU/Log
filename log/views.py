@@ -33,17 +33,6 @@ class SongListAPI(Resource):
 
 
   def get(self):
-    timezone_local = timezone("America/Detroit")
-
-    # Construct a datetime object for today's date at midnight Eastern time
-    date_today = date.today()
-    datetime_today_midnight_local = datetime.combine(date_today, time(0, 0, 0))
-    datetime_today_midnight_local_str = timezone_local.localize(datetime_today_midnight_local).isoformat()
-
-    # Construct a datetime object for today's date at 23:59:59 Eastern time
-    datetime_today_23_59_59_local = datetime_today_midnight_local + timedelta(seconds = 59, minutes = 59, hours = 23)
-    datetime_today_23_59_59_local_str = timezone_local.localize(datetime_today_23_59_59_local).isoformat()
-
     # Define a parser for the GET request arguments (all optional)
     #   n:      number of results to return
     #   start:  a datetime beginning at the value of which results will be returned
@@ -51,9 +40,8 @@ class SongListAPI(Resource):
     #   id:     an ID after which results will be returned
     #   delay:  whether or not the results returned should reflect the 30-second broadcast delay
     parser = reqparse.RequestParser()
-    parser.add_argument('n', type = int, default = 4294967295, location = 'args')
-    parser.add_argument('start', type = str, default = datetime_today_midnight_local_str, location = 'args')
-    parser.add_argument('end', type = str, default = datetime_today_23_59_59_local_str, location = 'args')
+    parser.add_argument('n', type = int, default = 500, location = 'args')
+    parser.add_argument('date', type = str, default = "", location = 'args')
     parser.add_argument('id', type = int, default = -1, location = 'args')
     parser.add_argument('delay', type = bool, default = False, location = 'args')
     parser.add_argument('desc', type = bool, default = False, location = 'args')
@@ -61,28 +49,18 @@ class SongListAPI(Resource):
     # Parse GET request arguments
     args = parser.parse_args()
     
-    # Convert start and end to datetime
-    start_no_colon = args['start'].replace(':','')
-    start_conformed_timestamp = start_no_colon[:-5].replace('-','') + start_no_colon[-5:]
-    args['start'] = datetime.strptime(start_conformed_timestamp, "%Y%m%dT%H%M%S%z" )
-    end_no_colon = args['end'].replace(':','')
-    end_conformed_timestamp = end_no_colon[:-5].replace('-','') + end_no_colon[-5:]
-    args['end'] = datetime.strptime(end_conformed_timestamp, "%Y%m%dT%H%M%S%z" )
+    # Query the database, filtering on the id argument
+    songs = Song.query.filter(Song.id > args['id'])
 
-    # Convert start and end to Eastern time
-    args['start'] = args['start'].astimezone(timezone_local)
-    args['end'] = args['end'].astimezone(timezone_local)
+    # If the date argument is present, only return records from that day
+    if (args['date']):
+      date = datetime.strptime(args['date'], "%Y-%m-%d").date()
+      songs = songs.filter(Song.ts.between(datetime.combine(date, time(0, 0, 0)),
+                                           datetime.combine(date, time(23, 59, 59))))
 
-    # If delay argument is True, subtract 30 seconds from start and end
+    # If delay argument is True, only return records that are at least 30 seconds old
     if (args['delay']):
-      args['start'] = args['start'] - timedelta(seconds = 30)
-      args['end'] = args['end'] - timedelta(seconds = 30)
-
-    # Query the database using the id and timestamp arguments
-    songs = Song.query\
-                .filter(Song.id > args['id'])\
-                .filter(Song.ts >= args['start'])\
-                .filter(Song.ts <= args['end'])
+      songs = songs.filter(Song.ts < datetime.now() - timedelta(seconds = 30))
 
     # Filter the results depending on the presence of the desc argument
     if (args['desc']):
@@ -92,7 +70,7 @@ class SongListAPI(Resource):
     songs = songs.limit(args['n'])
 
     # Return results
-    return { 'songs': [s.serialize for s in songs] }
+    return { 'songs': [marshal(s, song_fields) for s in songs] }
 
 
   def post(self):
