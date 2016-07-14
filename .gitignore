@@ -44,3 +44,7 @@ flask
 
 # config
 config.py
+
+# Deployment
+killpython
+runp.fcgi
