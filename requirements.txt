@@ -1,0 +1,17 @@
+aniso8601==1.1.0
+click==6.6
+Flask==0.11.1
+Flask-RESTful==0.3.5
+Flask-SQLAlchemy==2.1
+itsdangerous==0.24
+Jinja2==2.8
+MarkupSafe==0.23
+pkg-resources==0.0.0
+pylast==1.6.0
+PyMySQL==0.7.5
+python-dateutil==2.5.3
+pytz==2016.6
+requests==2.10.0
+six==1.10.0
+SQLAlchemy==1.0.14
+Werkzeug==0.11.10

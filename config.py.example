@@ -1,0 +1,18 @@
+# Enable the development environment
+DEBUG = True
+
+# Define the database
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://<dbuser>:<dbpassword>@<hostname>:3306/<dbname>'
+DATABASE_CONNECT_OPTIONS = {}
+
+# Last.fm credentials
+LASTFM_API_KEY = ""
+LASTFM_API_SECRET = ""
+LASTFM_USERNAME = ""
+LASTFM_PASSWORD = ""
+
+# TuneIn credentials
+TUNEIN_PARTNER_ID = ""
+TUNEIN_PARTNER_KEY = ""
+TUNEIN_STATION_ID = ""
