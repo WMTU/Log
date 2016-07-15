@@ -13,6 +13,13 @@ LASTFM_USERNAME = ""
 LASTFM_PASSWORD = ""
 
 # TuneIn credentials
+TUNEIN_API_URI = "http://air.radiotime.com/Playing.ashx"
 TUNEIN_PARTNER_ID = ""
 TUNEIN_PARTNER_KEY = ""
 TUNEIN_STATION_ID = ""
+
+# Icecast credentials
+ICECAST_SERVER_URI = "http://<hostname>:8000/"
+ICECAST_MOUNTPOINTS = ["</mountpoint>",]
+ICECAST_USERNAME = ""
+ICECAST_PASSWORD = ""
