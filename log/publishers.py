@@ -15,7 +15,7 @@ ti_params = {'partnerId':  app.config['TUNEIN_PARTNER_ID'],
 
 def publish(title, artist, album, timestamp):
   # Scrobble to Last.fm
-  network.scrobble(artist=artist, title=title, timestamp=timestamp)
+  network.scrobble(artist=artist, title=title, timestamp=timestamp, album = album)
 
   # Update TuneIn metadata
   ti_params['title']   = title
