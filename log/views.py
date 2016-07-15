@@ -23,13 +23,17 @@ song_fields = {
 
 class SongListAPI(Resource):
   def truncate_artist(self, artist):
+    # Remove leading 'The ', 'A ', or 'An '
     if artist.startswith('The '):
-      return artist[4:]
-    if artist.startswith('A '):
-      return artist[2:]
-    if artist.startswith('An '):
-      return artist[3:]
-    return artist
+      artist = artist[4:]
+    elif artist.startswith('A '):
+      artist = artist[2:]
+    elif artist.startswith('An '):
+      artist = artist[3:]
+
+    # Remove trailing featured artists
+    sep = ' feat. '
+    return artist.split(sep, 1)[0]
 
 
   def get(self):
