@@ -7,7 +7,6 @@ flipflop==1.0
 itsdangerous==0.24
 Jinja2==2.8
 MarkupSafe==0.23
-pkg-resources==0.0.0
 pylast==1.6.0
 PyMySQL==0.7.5
 python-dateutil==2.5.3
