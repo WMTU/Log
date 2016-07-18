@@ -3,7 +3,7 @@ from flask import request, jsonify
 from flask_restful import Api, fields, Resource, reqparse, marshal
 from pytz import timezone, utc
 from datetime import datetime, date, time, timedelta
-from .models import db, Song
+from .models import db, Song, Discrepancy
 from threading import Timer
 from .publishers import publish
 
@@ -20,8 +20,18 @@ song_fields = {
   'uri': fields.Url('song')
 }
 
+discrepancy_fields = {
+  'timestamp': fields.DateTime(dt_format = 'iso8601'),
+  'show_host': fields.String(attribute = 'dj_name'),
+  'title': fields.String(attribute = 'song_name'),
+  'artist': fields.String,
+  'word': fields.String,
+  'bees_released': fields.String(attribute = 'hit_button'),
+  'uri': fields.Url('discrepancy')
+}
 
-class SongListAPI(Resource):
+
+class SongsAPI(Resource):
   def truncate_artist(self, artist):
     # Remove leading 'The ', 'A ', or 'An '
     if artist.startswith('The '):
@@ -57,17 +67,17 @@ class SongListAPI(Resource):
     songs = Song.query.filter(Song.id > args['id'])
 
     # If the date argument is present, only return records from that day
-    if (args['date']):
+    if args['date']:
       date = datetime.strptime(args['date'], "%Y-%m-%d").date()
       songs = songs.filter(Song.ts.between(datetime.combine(date, time(0, 0, 0)),
                                            datetime.combine(date, time(23, 59, 59))))
 
     # If delay argument is True, only return records that are at least 30 seconds old
-    if (args['delay']):
+    if args['delay']:
       songs = songs.filter(Song.ts < datetime.now() - timedelta(seconds = 30))
 
     # Filter the results depending on the presence of the desc argument
-    if (args['desc']):
+    if args['desc']:
       songs = songs.order_by(Song.id.desc())
 
     # Limit the number of results to n
@@ -98,7 +108,7 @@ class SongListAPI(Resource):
     # Parse POST request arguments
     args = parser.parse_args()
 
-    # Build a new song object from the parsed arguments
+    # Build a new Song object from the parsed arguments
     new_song = Song(cd_number         = args['asset_id'],
                     song_name         = args['title'],
                     artist            = args['artist'],
@@ -134,6 +144,52 @@ class ChartsAPI(Resource):
     pass
 
 
-api.add_resource(SongListAPI, '/log/api/v1.0/songs', endpoint = 'songs')
+class DiscrepanciesAPI(Resource):
+  def post(self):
+    # Define a parser for the POST request arguments
+    #   show_host:      full name of the show host present when the discrepancy event occurred (required)
+    #   title:          song title (required)
+    #   artist:         song artist (required)
+    #   word:           the 'deadly' word that was uttered (required)
+    #   bees_released:  boolean value indicating whether or not the big red button was pressed and the word omitted from the broadcast signal by the delay unit
+    parser = reqparse.RequestParser()
+    parser.add_argument('show_host', type = str, required = True, help = 'No show host name provided', location = 'json')
+    parser.add_argument('title', type = str, required = True, help = 'No song title provided', location = 'json')
+    parser.add_argument('artist', type = str, required = True, help = 'No artist name provided', location = 'json')
+    parser.add_argument('word', type = str, required = True, help = 'No deadly word provided', location = 'json')
+    parser.add_argument('bees_released', type = bool, required = True, help = 'No indication of whether or not the big red button was pressed', location = 'json')
+
+    # Parse POST request arguments
+    args = parser.parse_args()
+
+    # Convert bees_released arg to format expected by db
+    bees_released = 'no'
+    if args['bees_released'] == True:
+      bees_released = 'yes'
+
+    # Build a new Discrepancy object from the parsed arguments
+    new_discrepancy = Discrepancy(dj_name    = args['show_host'],
+                                  song_name  = args['title'],
+                                  artist     = args['artist'],
+                                  word       = args['word'],
+                                  hit_button = bees_released)
+
+    # Add the new discrepancy to the database
+    db.session.add(new_discrepancy)
+    db.session.commit()
+    
+    # Return new discrepancy
+    return { 'discrepancy': marshal(new_discrepancy, discrepancy_fields) }, 201, {'Access-Control-Allow-Origin': '*'}
+
+
+class DiscrepancyAPI(Resource):
+  def get(self, id):
+    discrepancy = Discrepancy.query.filter_by(id = id).first_or_404()
+    return { 'discrepancy': marshal(discrepancy, discrepancy_fields) }, 200, {'Access-Control-Allow-Origin': '*'}
+
+
+api.add_resource(SongsAPI, '/log/api/v1.0/songs', endpoint = 'songs')
 api.add_resource(SongAPI, '/log/api/v1.0/song/<int:id>', endpoint = 'song')
 api.add_resource(ChartsAPI, '/log/api/v1.0/charts', endpoint = 'charts')
+api.add_resource(DiscrepanciesAPI, '/log/api/v1.0/discrepancies', endpoint = 'discrepancies')
+api.add_resource(DiscrepancyAPI, '/log/api/v1.0/discrepancy/<int:id>', endpoint = 'discrepancy')
