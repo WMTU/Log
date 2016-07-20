@@ -4,6 +4,7 @@ from flask_restful import Api, fields, Resource, reqparse, marshal
 from pytz import timezone, utc
 from datetime import datetime, date, time, timedelta
 from .models import db, Song, Discrepancy
+from re import sub
 from threading import Timer
 from .publishers import publish
 
@@ -110,10 +111,10 @@ class SongsAPI(Resource):
 
     # Build a new Song object from the parsed arguments
     new_song = Song(cd_number         = args['asset_id'],
-                    song_name         = args['title'],
-                    artist            = args['artist'],
-                    genre             = args['genre'],
-                    album             = args['album'],
+                    song_name         = sub(r'<[^>]+>', '', args['title']),
+                    artist            = sub(r'<[^>]+>', '', args['artist']),
+                    genre             = sub(r'<[^>]+>', '', args['genre']),
+                    album             = sub(r'<[^>]+>', '', args['album']),
                     location          = args['location'],
                     truncated_artist  = self.truncate_artist(args['artist']),
                     ts                = datetime.now(timezone_local))
