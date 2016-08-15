@@ -1,6 +1,10 @@
 # Enable the development environment
 DEBUG = True
 
+# Define POST credentials
+POST_USERNAME = ""
+POST_PASSWORD = ""
+
 # Define the database
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://<dbuser>:<dbpassword>@<hostname>:3306/<dbname>'

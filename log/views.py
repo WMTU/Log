@@ -101,7 +101,7 @@ class SongsAPI(Resource):
     return { 'songs': [marshal(s, song_fields) for s in songs] }, 200, {'Access-Control-Allow-Origin': '*'}
 
 
-  # @auth.login_required
+  @auth.login_required
   def post(self):
     timezone_local = timezone("America/Detroit")
 
