@@ -1,6 +1,7 @@
 from log import app
-from flask import request, jsonify
+from flask import request, jsonify, make_response
 from flask_restful import Api, fields, Resource, reqparse, marshal
+from flask_httpauth import HTTPBasicAuth
 from pytz import timezone, utc
 from datetime import datetime, date, time, timedelta
 from .models import db, Song, Discrepancy
@@ -9,6 +10,7 @@ from threading import Timer
 from .publishers import publish
 
 api = Api(app)
+auth = HTTPBasicAuth()
 
 song_fields = {
   'timestamp': fields.DateTime(dt_format = 'iso8601', attribute = 'ts'),
@@ -30,6 +32,17 @@ discrepancy_fields = {
   'bees_released': fields.String(attribute = 'hit_button'),
   'uri': fields.Url('discrepancy')
 }
+
+
+@auth.get_password
+def get_password(username):
+  if username == app.config['POST_USERNAME']:
+    return app.config['POST_PASSWORD']
+  return None
+
+@auth.error_handler
+def unauthorized():
+  return make_response(jsonify({'error': 'Unauthorized access'}), 401)
 
 
 class SongsAPI(Resource):
@@ -88,6 +101,7 @@ class SongsAPI(Resource):
     return { 'songs': [marshal(s, song_fields) for s in songs] }, 200, {'Access-Control-Allow-Origin': '*'}
 
 
+  # @auth.login_required
   def post(self):
     timezone_local = timezone("America/Detroit")
 
@@ -146,6 +160,7 @@ class ChartsAPI(Resource):
 
 
 class DiscrepanciesAPI(Resource):
+  @auth.login_required
   def post(self):
     # Define a parser for the POST request arguments
     #   show_host:      full name of the show host present when the discrepancy event occurred (required)
