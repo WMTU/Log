@@ -20,7 +20,7 @@ song_fields = {
   'artist': fields.String,
   'album': fields.String,
   'genre': fields.String,
-  'uri': fields.Url('song')
+  'id': fields.Integer
 }
 
 discrepancy_fields = {
@@ -30,7 +30,7 @@ discrepancy_fields = {
   'artist': fields.String,
   'word': fields.String,
   'bees_released': fields.String(attribute = 'hit_button'),
-  'uri': fields.Url('discrepancy')
+  'id': fields.Integer
 }
 
 
