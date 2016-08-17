@@ -63,10 +63,10 @@ class SongsAPI(Resource):
   def get(self):
     # Define a parser for the GET request arguments (all optional)
     #   n:      number of results to return
-    #   start:  a datetime beginning at the value of which results will be returned
-    #   end:    a datetime ending at the value of which results will be returned
+    #   date:   a date on which results will be returned
     #   id:     an ID after which results will be returned
     #   delay:  whether or not the results returned should reflect the 30-second broadcast delay
+    #   desc:   whether or not the results should be returned in descending order
     parser = reqparse.RequestParser()
     parser.add_argument('n', type = int, default = 500, location = 'args')
     parser.add_argument('date', type = str, default = "", location = 'args')
@@ -160,6 +160,40 @@ class ChartsAPI(Resource):
 
 
 class DiscrepanciesAPI(Resource):
+  def get(self):
+    # Define a parser for the GET request arguments (all optional)
+    #   n:      number of results to return
+    #   date:   a date on which results will be returned
+    #   id:     an ID after which results will be returned
+    #   desc:   whether or not the results should be returned in descending order
+    parser = reqparse.RequestParser()
+    parser.add_argument('n', type = int, default = 10, location = 'args')
+    parser.add_argument('date', type = str, default = "", location = 'args')
+    parser.add_argument('id', type = int, default = -1, location = 'args')
+    parser.add_argument('desc', type = bool, default = False, location = 'args')
+
+    # Parse GET request arguments
+    args = parser.parse_args()
+    
+    # Query the database, filtering on the id argument
+    discrepancies = Discrepancy.query.filter(Discrepancy.id > args['id'])
+
+    # If the date argument is present, only return records from that day
+    if args['date']:
+      date = datetime.strptime(args['date'], "%Y-%m-%d").date()
+      discrepancies = discrepancies.filter(Discrepancy.timestamp.between(datetime.combine(date, time(0, 0, 0)),
+                                                                         datetime.combine(date, time(23, 59, 59))))
+
+    # Filter the results depending on the presence of the desc argument
+    if args['desc']:
+      discrepancies = discrepancies.order_by(Discrepancy.id.desc())
+
+    # Limit the number of results to n
+    discrepancies = discrepancies.limit(args['n'])
+
+    # Return results
+    return { 'discrepancies': [marshal(d, discrepancy_fields) for d in discrepancies] }, 200, {'Access-Control-Allow-Origin': '*'}
+
   @auth.login_required
   def post(self):
     # Define a parser for the POST request arguments
