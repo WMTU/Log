@@ -16,6 +16,9 @@ LASTFM_API_SECRET = ""
 LASTFM_USERNAME = ""
 LASTFM_PASSWORD = ""
 
+# wmtu web server url
+WMTU_SERVER_URL = "wmtu.fm/api/update"
+
 # TuneIn credentials
 TUNEIN_API_URI = "http://air.radiotime.com/Playing.ashx"
 TUNEIN_PARTNER_ID = ""
