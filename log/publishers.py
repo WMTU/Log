@@ -1,6 +1,7 @@
 from log import app
 from pylast import LastFMNetwork, md5
 from requests import get
+from requests import post
 
 # Connect to the Last.fm network
 network = LastFMNetwork(api_key       = app.config['LASTFM_API_KEY'],
@@ -14,6 +15,15 @@ ti_params = {'partnerId':  app.config['TUNEIN_PARTNER_ID'],
              'id':         app.config['TUNEIN_STATION_ID']}
 
 def publish(title, artist, album, timestamp):
+  # POST to wmtu.fm
+  wmtu_params = {
+    'title': title,
+    'artist': artist,
+    'album': album,
+    'timestamp': timestamp
+  }
+  post(url=app.config['WMTU_SERVER_URL'], data=wmtu_params)
+  
   # Scrobble to Last.fm
   network.scrobble(artist=artist, title=title, timestamp=timestamp, album = album)
 
